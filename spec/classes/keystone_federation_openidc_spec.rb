@@ -6,18 +6,16 @@ describe 'keystone::federation::openidc' do
     <<-EOS
     class { 'keystone':
       admin_token => 'service_token',
-      admin_password => 'special_password',
+      public_endpoint => 'http://os.example.com:5000',
+      admin_endpoint => 'http://os.example.com:35357',
     }
 
-    include apache
-
-    class { 'keystone::wsgi::apache': }
+    include keystone::wsgi::apache
     EOS
   end
 
   let :params do
-    { :methods => 'password, token, openidc',
-      :idp_name => 'myidp',
+    { :idp_name => 'myidp',
       :openidc_provider_metadata_url => 'https://accounts.google.com/.well-known/openid-configuration',
       :openidc_client_id => 'openid_client_id',
       :openidc_client_secret => 'openid_client_secret',
@@ -26,16 +24,6 @@ describe 'keystone::federation::openidc' do
   end
 
   context 'with invalid params' do
-    before do
-      params.merge!(:methods => 'external, password, token, oauth1')
-      it_raises 'a Puppet::Error', /The external method should be dropped to avoid any interference with openidc/
-    end
-
-    before do
-      params.merge!(:methods => 'password, token, oauth1')
-      it_raises 'a Puppet::Error', /Methods should contain openidc as one of the auth methods./
-    end
-
     before do
       params.merge!(:admin_port => false,
                     :main_port  => false)
@@ -73,15 +61,15 @@ describe 'keystone::federation::openidc' do
     end
 
     context 'with only required parameters' do
-      it 'should have basic params for mellon in Keystone configuration' do
-        is_expected.to contain_keystone_config('auth/methods').with_value('password, token, openidc')
-        is_expected.to contain_keystone_config('auth/openidc').with_ensure('absent')
+      it 'should set remote_id_attribute in keystone' do
+        is_expected.to contain_keystone_config('openid/remote_id_attribute').with_value('HTTP_OIDC_ISS')
       end
 
-      it { is_expected.to contain_concat__fragment('configure_openidc_on_port_5000').with({
+      it { is_expected.to contain_concat__fragment('configure_openidc_on_main').with({
         :target => "10-keystone_wsgi_main.conf",
         :order  => params[:template_order],
       })}
+
     end
 
     context 'with override default parameters' do
@@ -91,23 +79,21 @@ describe 'keystone::federation::openidc' do
         })
       end
 
-      it 'should have basic params for mellon in Keystone configuration' do
-        is_expected.to contain_keystone_config('auth/methods').with_value('password, token, openidc')
-        is_expected.to contain_keystone_config('auth/openidc').with_ensure('absent')
+      it 'should set remote_id_attribute in keystone' do
+        is_expected.to contain_keystone_config('openid/remote_id_attribute').with_value('HTTP_OIDC_ISS')
       end
 
-      it { is_expected.to contain_concat__fragment('configure_openidc_on_port_5000').with({
+      it { is_expected.to contain_concat__fragment('configure_openidc_on_main').with({
         :target => "10-keystone_wsgi_main.conf",
         :order  => params[:template_order],
       })}
 
-      it { is_expected.to contain_concat__fragment('configure_openidc_on_port_35357').with({
+      it { is_expected.to contain_concat__fragment('configure_openidc_on_admin').with({
         :target => "10-keystone_wsgi_admin.conf",
         :order  => params[:template_order],
       })}
     end
 
     it { is_expected.to contain_package(platform_parameters[:openidc_package_name]) }
-
   end
 end

@@ -50,7 +50,7 @@ describe provider_class do
         :value => '/tmp'
       })
       config_provider = Puppet::Type.type(:keystone_config)
-        .provider(:ini_setting)
+        .provider(:openstackconfig)
       keystone_config = config_provider.new(config)
       keystone_config.class.expects(:file_path).at_least_once.returns(tmpfile)
       keystone_config.create
@@ -77,8 +77,7 @@ describe provider_class do
         expect { @domain_provider.create }.not_to raise_error
         expect(File).to exist('/tmp/keystone.bar.conf')
         expect(File.read('/tmp/keystone.bar.conf'))
-          .to eq('
-[dude]
+          .to eq('[dude]
 foo=blahh
 ')
       end
@@ -96,14 +95,12 @@ foo=blahh
         expect(File).to exist('/tmp/keystone.baz.conf')
 
         expect(File.read('/tmp/keystone.bar.conf'))
-          .to eq('
-[dude]
+          .to eq('[dude]
 foo=blahh
 ')
 
         expect(File.read('/tmp/keystone.baz.conf'))
-          .to eq('
-[duck]
+          .to eq('[duck]
 go=where
 ')
       end

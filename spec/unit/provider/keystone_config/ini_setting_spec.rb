@@ -15,7 +15,7 @@ $LOAD_PATH.push(
     'lib')
 )
 require 'spec_helper'
-provider_class = Puppet::Type.type(:keystone_config).provider(:ini_setting)
+provider_class = Puppet::Type.type(:keystone_config).provider(:openstackconfig)
 describe provider_class do
 
   it 'should default to the default setting when no other one is specified' do

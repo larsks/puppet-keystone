@@ -43,12 +43,12 @@ describe 'Puppet::Type.type(:keystone_config)' do
 
   it 'should accept a valid value' do
     @keystone_config[:value] = 'bar'
-    expect(@keystone_config[:value]).to eq('bar')
+    expect(@keystone_config[:value]).to eq(['bar'])
   end
 
   it 'should not accept a value with whitespace' do
     @keystone_config[:value] = 'b ar'
-    expect(@keystone_config[:value]).to eq('b ar')
+    expect(@keystone_config[:value]).to eq(['b ar'])
   end
 
   it 'should accept valid ensure values' do

@@ -1,6 +1,6 @@
 Puppet::Type.type(:keystone_domain_config).provide(
   :openstack,
-  :parent => Puppet::Type.type(:openstack_config).provider(:ini_setting)
+  :parent => Puppet::Type.type(:openstack_config).provider(:ruby)
 ) do
 
   class Puppet::Error::OpenstackMissingDomainName < Puppet::Error; end
@@ -17,7 +17,7 @@ Puppet::Type.type(:keystone_domain_config).provide(
     if base_dir == :absent
       '/etc/keystone/domains'
     else
-      base_dir
+      base_dir[0]
     end
   end
 
@@ -38,7 +38,7 @@ Puppet::Type.type(:keystone_domain_config).provide(
   def self.prefetch(resources)
     catalog = resources.values.first.catalog
     resource_dir = find_domain_conf(catalog)
-    @base_dir = resource_dir.nil? ? nil : resource_dir[:value]
+    @base_dir = resource_dir.nil? ? nil : resource_dir[:value][0]
   end
 
   def self.base_dir_exists?

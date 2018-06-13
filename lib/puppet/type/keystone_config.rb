@@ -9,4 +9,8 @@ Puppet::Type.newtype(:keystone_config) do
 
   create_parameters
 
+  autorequire(:package) do
+    'keystone'
+  end
+
 end
