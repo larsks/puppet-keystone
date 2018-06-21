@@ -28,6 +28,39 @@
 #  (Optional) String value.
 #  Defaults to 'id_token'
 #
+# [* openidc_cache_type *]
+#    (Optional) mod_auth_openidc cache type.  Can be any cache type
+#    supported by mod_auth_openidc (shm, file, memcache, redis).
+#    Defaults to undef.
+#
+# [* openidc_cache_shm_max *]
+#    (Optional) The maximum number of name/value pair entries that can
+#    be cached when using the 'shm' cache type. Defaults to undef.
+#
+# [* openidc_cache_shm_entry_size *]
+#    (Optional) The maximum size for a single shm cache entry in bytes
+#    with a minimum of 8464 bytes. Defaults to undef.
+#
+# [* openidc_cache_dir *]
+#    (Optional) # Directory that holds cache files; must be writable
+#    for the Apache process/user. Defaults to undef.
+#
+# [* openidc_cache_clean_interval *]
+#    (Optional) # Cache file clean interval in seconds (only triggered
+#    on writes). Defaults to undef.
+#
+# [* memcached_servers *]
+#    (Optional) A list of memcache servers. Defaults to undef.
+#
+# [* redis_server *]
+#    (Optional) Specifies the Redis server used for caching as
+#    <hostname>[:<port>]. Defaults to undef.
+#
+# [* redis_password *]
+#    (Optional) Password to be used if the Redis server requires
+#    authentication. When not specified, no authentication is
+#    performed. Defaults to undef.
+#
 # [*admin_port*]
 #  A boolean value to ensure that you want to configure openidc Federation
 #  using Keystone VirtualHost on port 35357.
@@ -49,15 +82,15 @@
 #  (Optional) Defaults to 331.
 #
 # [*package_ensure*]
-#   (optional) Desired ensure state of packages.
+#   (Optional) Desired ensure state of packages.
 #   accepts latest or specific versions.
 #   Defaults to present.
 #
 # [*keystone_public_url*]
-#   (optional) URL to keystone public endpoint.
+#   (Optional) URL to keystone public endpoint.
 #
 # [*keystone_admin_url*]
-#    (optional) URL to keystone admin endpoint.
+#    (Optional) URL to keystone admin endpoint.
 #
 # === DEPRECATED
 #
@@ -69,17 +102,25 @@ class keystone::federation::openidc (
   $openidc_provider_metadata_url,
   $openidc_client_id,
   $openidc_client_secret,
-  $openidc_crypto_passphrase   = 'openstack',
-  $openidc_response_type       = 'id_token',
-  $admin_port                  = false,
-  $main_port                   = true,
-  $template_order              = 331,
-  $package_ensure              = present,
-  $keystone_public_url         = undef,
-  $keystone_admin_url          = undef,
+  $openidc_crypto_passphrase    = 'openstack',
+  $openidc_response_type        = 'id_token',
+  $openidc_cache_type           = undef,
+  $openidc_cache_shm_max        = undef,
+  $openidc_cache_shm_entry_size = undef,
+  $openidc_cache_dir            = undef,
+  $openidc_cache_clean_interval = undef,
+  $memcached_servers            = undef,
+  $redis_server                 = undef,
+  $redis_password               = undef,
+  $admin_port                   = false,
+  $main_port                    = true,
+  $template_order               = 331,
+  $package_ensure               = present,
+  $keystone_public_url          = undef,
+  $keystone_admin_url           = undef,
 
   # DEPRECATED
-  $module_plugin               = undef,
+  $module_plugin                = undef,
 ) {
 
   include ::apache
@@ -88,6 +129,7 @@ class keystone::federation::openidc (
 
   $_keystone_public_url = pick($keystone_public_url, $::keystone::public_endpoint)
   $_keystone_admin_url = pick($keystone_admin_url, $::keystone::admin_endpoint)
+  $_memcached_servers = join(any2array($memcached_servers), ' ')
 
   # Note: if puppet-apache modify these values, this needs to be updated
   if $template_order <= 330 or $template_order >= 999 {
